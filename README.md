@@ -45,15 +45,15 @@ VM一覧取得:
 
 VMプラン一覧取得:
 
-    $ conoha compute flavors list
-    $ conoha compute flavors list --detail
-    $ conoha compute flavors list --text
+    $ conoha compute flavor list
+    $ conoha compute flavor list --detail
+    $ conoha compute flavor list --text
 
 イメージ一覧取得(nova):
 
-    $ conoha compute images list
-    $ conoha compute images list --detail
-    $ conoha compute images list --text
+    $ conoha compute image list
+    $ conoha compute image list --detail
+    $ conoha compute image list --text
 
 VM作成:
 
