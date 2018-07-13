@@ -170,7 +170,7 @@ def vm():
 def list(outline, text, imageid="", flavorid="", name="", status=""):
     headers = { "X-Auth-Token": config.access_token }
 
-    if outline:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/servers" % (config.region, config.tenant_id)
     else:
         url = "https://compute.%s.conoha.io/v2/%s/servers/detail" % (config.region, config.tenant_id)
@@ -321,7 +321,7 @@ def flavor():
 def list(outline, text, mindisk=False, minram=False):
     headers = { "X-Auth-Token": config.access_token }
 
-    if outline:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/flavors" % (config.region, config.tenant_id)
     else:
         url = "https://compute.%s.conoha.io/v2/%s/flavors/detail" % (config.region, config.tenant_id)
@@ -353,7 +353,7 @@ def image():
 def list(outline, text, name, status, imagetype):
     headers = { "X-Auth-Token": config.access_token }
 
-    if outline:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/images" % (config.region, config.tenant_id)
     else:
         url = "https://compute.%s.conoha.io/v2/%s/images/detail" % (config.region, config.tenant_id)
@@ -379,15 +379,57 @@ def keypair():
 
 @keypair.command()
 @click.argument("keypair_name", default=False)
-def list(keypair_name):
+@click.option('--text', is_flag=True)
+def list(keypair_name, text):
     headers = { "X-Auth-Token": config.access_token }
 
-    if keypair_name:
+    if keypair_name and not text:
         url = "https://compute.%s.conoha.io/v2/%s/os-keypairs/%s" % (config.region, config.tenant_id, keypair_name)
     else:
         url = "https://compute.%s.conoha.io/v2/%s/os-keypairs" % (config.region, config.tenant_id)
 
     r = requests.get(url, headers=headers)
+
+    if text:
+        click.echo("KEYPAIR_NAME");
+        click.echo("-------------------------");
+        for keypair in json.loads(r.text)['keypairs']:
+            click.echo("%s" % (keypair['keypair']['name']))
+    else:
+        click.echo(r.text)
+
+@keypair.command()
+@click.option('-n', '--name', 'keypair_name', type=str, help='KEYPAIR NAME', required=True)
+@click.option('-k', '--key', 'public_key', type=str, help='PUBLIC KEY')
+def add(keypair_name, public_key):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/os-keypairs" % (config.region, config.tenant_id)
+
+    payload = {
+        "keypair": {
+            "name": keypair_name
+        }
+    } 
+
+    if public_key: payload['keypair']['public_key'] = public_key
+
+    r = requests.post(url, headers=headers, data=json.dumps(payload))
+
+    click.echo(r.text)
+
+@keypair.command()
+@click.argument("keypair_name")
+def remove(keypair_name):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/os-keypairs/%s" % (config.region, config.tenant_id, keypair_name)
+
+    r = requests.delete(url, headers=headers)
+
+    if r.status_code == 202:
+        click.echo("[StatusCode: %s] Success." % r.status_code)
+    else:
+        click.echo("[StatusCode: %s] Failed." % r.status_code)
+
     click.echo(r.text)
 
 def main():
