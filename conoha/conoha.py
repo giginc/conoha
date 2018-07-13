@@ -161,19 +161,19 @@ def vm():
     pass
 
 @vm.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('-i', '--imageid', 'imageid', type=str, help='ImageID')
 @click.option('-f', '--flavorid', 'flavorid', type=str, help='FlavorID')
 @click.option('-n', '--name', 'name', type=str, help='VM Name')
 @click.option('-s', '--status', 'status', type=str, help='VM Status')
-def list(detail, text, imageid="", flavorid="", name="", status=""):
+def list(outline, text, imageid="", flavorid="", name="", status=""):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/servers/detail" % (config.region, config.tenant_id)
-    else:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/servers" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/servers/detail" % (config.region, config.tenant_id)
 
     query = {}
     if imageid: query["image"] = imageid
@@ -314,17 +314,17 @@ def flavor():
     pass
 
 @flavor.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('--mindisk', 'mindisk', type=str, help='最小 DISK サイズ(GB)でフィルター')
 @click.option('--minram', 'minram', type=str, help='最小 RAM サイズ(MB)でフィルター')
-def list(detail, text, mindisk=False, minram=False):
+def list(outline, text, mindisk=False, minram=False):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/flavors/detail" % (config.region, config.tenant_id)
-    else:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/flavors" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/flavors/detail" % (config.region, config.tenant_id)
 
     query = {}
     if mindisk: query["minDisk"] = mindisk
@@ -345,18 +345,18 @@ def image():
     pass
 
 @image.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('-n', '--name', 'name', type=str, help='Image Name')
 @click.option('-s', '--status', 'status', type=str, help='Image Status')
 @click.option('-t', '--type', 'imagetype', type=str, help='Image Type')
-def list(detail, text, name, status, imagetype):
+def list(outline, text, name, status, imagetype):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/images/detail" % (config.region, config.tenant_id)
-    else:
+    if outline and not text:
         url = "https://compute.%s.conoha.io/v2/%s/images" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/images/detail" % (config.region, config.tenant_id)
 
     query = {}
     if name: query["name"] = name
@@ -372,6 +372,87 @@ def list(detail, text, name, status, imagetype):
             click.echo("%s\t%s\t%s" % (image["status"], image["id"], image["name"]))
     else:
         click.echo(r.text)
+
+@image.command()
+@click.argument("vm_id")
+@click.option('-n', '--name', 'image_name', type=str, help='CREATE IMAGE NAME', required=True)
+def save(vm_id, image_name):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/servers/%s/action" % (config.region, config.tenant_id, vm_id)
+
+    payload = {
+        "createImage": {
+            "name": image_name
+        }
+    } 
+
+    r = requests.post(url, headers=headers, data=json.dumps(payload))
+
+    if r.status_code == 202:
+        click.echo("[StatusCode: %s] Success." % r.status_code)
+    else:
+        click.echo("[StatusCode: %s] Failed." % r.status_code)
+
+    click.echo(r.text)
+
+@compute.group()
+def keypair():
+    pass
+
+@keypair.command()
+@click.argument("keypair_name", default=False)
+@click.option('--text', is_flag=True)
+def list(keypair_name, text):
+    headers = { "X-Auth-Token": config.access_token }
+
+    if keypair_name and not text:
+        url = "https://compute.%s.conoha.io/v2/%s/os-keypairs/%s" % (config.region, config.tenant_id, keypair_name)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/os-keypairs" % (config.region, config.tenant_id)
+
+    r = requests.get(url, headers=headers)
+
+    if text:
+        click.echo("KEYPAIR_NAME");
+        click.echo("-------------------------");
+        for keypair in json.loads(r.text)['keypairs']:
+            click.echo("%s" % (keypair['keypair']['name']))
+    else:
+        click.echo(r.text)
+
+@keypair.command()
+@click.option('-n', '--name', 'keypair_name', type=str, help='KEYPAIR NAME', required=True)
+@click.option('-k', '--key', 'public_key', type=str, help='PUBLIC KEY')
+def add(keypair_name, public_key):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/os-keypairs" % (config.region, config.tenant_id)
+
+    payload = {
+        "keypair": {
+            "name": keypair_name
+        }
+    } 
+
+    if public_key: payload['keypair']['public_key'] = public_key
+
+    r = requests.post(url, headers=headers, data=json.dumps(payload))
+
+    click.echo(r.text)
+
+@keypair.command()
+@click.argument("keypair_name")
+def remove(keypair_name):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/os-keypairs/%s" % (config.region, config.tenant_id, keypair_name)
+
+    r = requests.delete(url, headers=headers)
+
+    if r.status_code == 202:
+        click.echo("[StatusCode: %s] Success." % r.status_code)
+    else:
+        click.echo("[StatusCode: %s] Failed." % r.status_code)
+
+    click.echo(r.text)
 
 def main():
     global config
