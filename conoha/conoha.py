@@ -373,6 +373,28 @@ def list(outline, text, name, status, imagetype):
     else:
         click.echo(r.text)
 
+@image.command()
+@click.argument("vm_id")
+@click.option('-n', '--name', 'image_name', type=str, help='CREATE IMAGE NAME', required=True)
+def save(vm_id, image_name):
+    headers = { "X-Auth-Token": config.access_token }
+    url = "https://compute.%s.conoha.io/v2/%s/servers/%s/action" % (config.region, config.tenant_id, vm_id)
+
+    payload = {
+        "createImage": {
+            "name": image_name
+        }
+    } 
+
+    r = requests.post(url, headers=headers, data=json.dumps(payload))
+
+    if r.status_code == 202:
+        click.echo("[StatusCode: %s] Success." % r.status_code)
+    else:
+        click.echo("[StatusCode: %s] Failed." % r.status_code)
+
+    click.echo(r.text)
+
 @compute.group()
 def keypair():
     pass
