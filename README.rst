@@ -35,19 +35,19 @@ Usage
 VM一覧取得::
 
   $ conoha compute vm list
-  $ conoha compute vm list --detail
+  $ conoha compute vm list --outline
   $ conoha compute vm list --text
 
 VMプラン一覧取得::
 
   $ conoha compute flavor list
-  $ conoha compute flavor list --detail
+  $ conoha compute flavor list --outline
   $ conoha compute flavor list --text
 
 イメージ一覧取得(nova)::
 
   $ conoha compute image list
-  $ conoha compute image list --detail
+  $ conoha compute image list --outline
   $ conoha compute image list --text
 
 VM作成::

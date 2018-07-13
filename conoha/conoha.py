@@ -161,19 +161,19 @@ def vm():
     pass
 
 @vm.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('-i', '--imageid', 'imageid', type=str, help='ImageID')
 @click.option('-f', '--flavorid', 'flavorid', type=str, help='FlavorID')
 @click.option('-n', '--name', 'name', type=str, help='VM Name')
 @click.option('-s', '--status', 'status', type=str, help='VM Status')
-def list(detail, text, imageid="", flavorid="", name="", status=""):
+def list(outline, text, imageid="", flavorid="", name="", status=""):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/servers/detail" % (config.region, config.tenant_id)
-    else:
+    if outline:
         url = "https://compute.%s.conoha.io/v2/%s/servers" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/servers/detail" % (config.region, config.tenant_id)
 
     query = {}
     if imageid: query["image"] = imageid
@@ -314,17 +314,17 @@ def flavor():
     pass
 
 @flavor.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('--mindisk', 'mindisk', type=str, help='最小 DISK サイズ(GB)でフィルター')
 @click.option('--minram', 'minram', type=str, help='最小 RAM サイズ(MB)でフィルター')
-def list(detail, text, mindisk=False, minram=False):
+def list(outline, text, mindisk=False, minram=False):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/flavors/detail" % (config.region, config.tenant_id)
-    else:
+    if outline:
         url = "https://compute.%s.conoha.io/v2/%s/flavors" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/flavors/detail" % (config.region, config.tenant_id)
 
     query = {}
     if mindisk: query["minDisk"] = mindisk
@@ -345,18 +345,18 @@ def image():
     pass
 
 @image.command()
-@click.option('--detail', is_flag=True)
+@click.option('--outline', is_flag=True)
 @click.option('--text', is_flag=True)
 @click.option('-n', '--name', 'name', type=str, help='Image Name')
 @click.option('-s', '--status', 'status', type=str, help='Image Status')
 @click.option('-t', '--type', 'imagetype', type=str, help='Image Type')
-def list(detail, text, name, status, imagetype):
+def list(outline, text, name, status, imagetype):
     headers = { "X-Auth-Token": config.access_token }
 
-    if detail or text:
-        url = "https://compute.%s.conoha.io/v2/%s/images/detail" % (config.region, config.tenant_id)
-    else:
+    if outline:
         url = "https://compute.%s.conoha.io/v2/%s/images" % (config.region, config.tenant_id)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/images/detail" % (config.region, config.tenant_id)
 
     query = {}
     if name: query["name"] = name
