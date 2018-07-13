@@ -373,6 +373,23 @@ def list(detail, text, name, status, imagetype):
     else:
         click.echo(r.text)
 
+@compute.group()
+def keypair():
+    pass
+
+@keypair.command()
+@click.argument("keypair_name", default=False)
+def list(keypair_name):
+    headers = { "X-Auth-Token": config.access_token }
+
+    if keypair_name:
+        url = "https://compute.%s.conoha.io/v2/%s/os-keypairs/%s" % (config.region, config.tenant_id, keypair_name)
+    else:
+        url = "https://compute.%s.conoha.io/v2/%s/os-keypairs" % (config.region, config.tenant_id)
+
+    r = requests.get(url, headers=headers)
+    click.echo(r.text)
+
 def main():
     global config
     config = Config()
