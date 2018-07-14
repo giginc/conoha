@@ -13,7 +13,7 @@ Installation
 =====================
 以下のコマンドを実行することで conoha コマンドが利用可能になります。::
 
-  $ pip install conoha
+  $ pip3 install conoha
 
 Configuration
 =====================
