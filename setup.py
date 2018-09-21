@@ -7,7 +7,7 @@ with open('README.rst') as f:
 
 setup(
     name='conoha',
-    version='0.1.13',
+    version='0.1.14',
     packages=['conoha'],
     description='A command-line interface to the ConoHa.',
     long_description=readme,
