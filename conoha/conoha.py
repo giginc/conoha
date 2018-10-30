@@ -186,7 +186,9 @@ def list(outline, text, imageid="", flavorid="", name="", status=""):
     if text:
         click.echo("STATUS\tVM_ID\tNAME\tINSTANCE_NAME_TAG");
         click.echo("-------------------------------------------------------------------------------");
-        for server in json.loads(r.text)['servers']:
+        servers = json.loads(r.text)['servers'];
+        servers = sorted(servers, key=lambda server: server["metadata"]['instance_name_tag'])
+        for server in servers:
             click.echo("%s\t%s\t%s\t%s" % (server["status"], server["id"], server["name"].replace('-', '.'), server["metadata"]['instance_name_tag']))
     else:
         click.echo(r.text)
