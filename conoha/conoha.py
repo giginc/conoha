@@ -297,15 +297,11 @@ def create(imageid, flavorid, password, name, key, groupNames):
             "adminPass": password,
             "metadata": {}
         }
-    } 
+    }
 
     if name: payload["server"]['metadata']['instance_name_tag'] = name
     if key: payload['server']['key_name'] = key
-
-    if groupNames:
-        payload['server']['security_groups'] = []
-        for name in groupNames:
-            payload['server']['security_groups'].append({ 'name': name, })
+    if groupNames: payload['server']['security_groups'] = [{ 'name': groupNames }]
 
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
