@@ -77,6 +77,15 @@ class Config():
             click.echo("Authentication failed." % r.status_code)
             exit()
 
+    def get_addr(self, addresses, interface_text="ext", tcp_version=4):
+        data = [value for interface, value in addresses.items() if interface_text + '-' in interface]
+        if data:
+            for addr in data[0]:
+                if addr['version'] == tcp_version:
+                    return addr
+
+        return {}
+
 @click.group()
 def cmd():
     pass
@@ -184,12 +193,20 @@ def list(outline, text, imageid="", flavorid="", name="", status=""):
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("STATUS\tVM_ID\tNAME\tINSTANCE_NAME_TAG");
-        click.echo("-------------------------------------------------------------------------------");
+        click.echo("STATUS\tVM_ID\t\t\t\t\tGIP\t\tPIP\t\tINSTANCE_NAME_TAG");
+        click.echo("-------------------------------------------------------------------------------------------------");
         servers = json.loads(r.text)['servers'];
         servers = sorted(servers, key=lambda server: server["metadata"]['instance_name_tag'])
         for server in servers:
-            click.echo("%s\t%s\t%s\t%s" % (server["status"], server["id"], server["name"].replace('-', '.'), server["metadata"]['instance_name_tag']))
+            grobal_ip = config.get_addr(server["addresses"], "ext")
+            private_ip = config.get_addr(server["addresses"], "local")
+            click.echo("%s\t%s\t%s\t%s\t%s" % (
+                server["status"],
+                server["id"],
+                grobal_ip.get("addr") if grobal_ip.get("addr") else "\t",
+                private_ip.get("addr") if private_ip.get("addr") else "\t",
+                server["metadata"]['instance_name_tag']
+            ))
     else:
         click.echo(r.text)
 
@@ -297,15 +314,11 @@ def create(imageid, flavorid, password, name, key, groupNames):
             "adminPass": password,
             "metadata": {}
         }
-    } 
+    }
 
     if name: payload["server"]['metadata']['instance_name_tag'] = name
     if key: payload['server']['key_name'] = key
-
-    if groupNames:
-        payload['server']['security_groups'] = []
-        for name in groupNames:
-            payload['server']['security_groups'].append({ 'name': name, })
+    if groupNames: payload['server']['security_groups'] = [{ 'name': groupNames }]
 
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
