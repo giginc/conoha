@@ -15,10 +15,10 @@ class Config():
 
     def __init__(self):
         if os.path.exists("%s/%s" % (Config.CONFIG_DIR, Config.CONFIG_FILE)):
-            config = toml.load(open("%s/%s" % (Config.CONFIG_DIR, Config.CONFIG_FILE))) 
+            config = toml.load(open("%s/%s" % (Config.CONFIG_DIR, Config.CONFIG_FILE)))
             if datetime.datetime.strptime(config["default"]["expires"], '%Y-%m-%dT%H:%M:%SZ') <= datetime.datetime.now():
                 self.init_config(config["default"]["username"], config["default"]["password"], config["default"]["tenant_id"])
-            
+
         else:
             self.init_config()
 
@@ -26,14 +26,14 @@ class Config():
         self.tenant_id = config["default"]["tenant_id"]
         self.access_token = config["default"]["access_token"]
         self.region = config["default"]["region"]
-    
+
     def init_config(self, username=False, password=False, tenant_id=False):
 
         if (not username or not password or not tenant_id):
             username = input("username : ")
             password = input("password : ")
             tenant_id = input("tenant_id : ")
-    
+
         payload = {
             "auth": {
                 "passwordCredentials": {
@@ -42,7 +42,7 @@ class Config():
                 },
                 "tenantId": tenant_id
             }
-        } 
+        }
 
         regions = ["tyo1", "tyo2"]
         authenticated = False
@@ -69,7 +69,7 @@ class Config():
             os.makedirs(Config.CONFIG_DIR, exist_ok=True)
             with open("%s/%s" % (Config.CONFIG_DIR, Config.CONFIG_FILE), 'w') as f:
                 toml.dump(d, f)
-        
+
             authenticated = True
             click.echo("Authentication success.")
 
@@ -193,9 +193,9 @@ def list(outline, text, imageid="", flavorid="", name="", status=""):
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("STATUS\tVM_ID\t\t\t\t\tGIP\t\tPIP\t\tINSTANCE_NAME_TAG");
-        click.echo("-------------------------------------------------------------------------------------------------");
-        servers = json.loads(r.text)['servers'];
+        click.echo("STATUS\tVM_ID\t\t\t\t\tGIP\t\tPIP\t\tINSTANCE_NAME_TAG")
+        click.echo("-------------------------------------------------------------------------------------------------")
+        servers = json.loads(r.text)['servers']
         servers = sorted(servers, key=lambda server: server["metadata"]['instance_name_tag'])
         for server in servers:
             grobal_ip = config.get_addr(server["addresses"], "ext")
@@ -218,7 +218,7 @@ def up(vm_id):
 
     payload = {
         "os-start": "null"
-    } 
+    }
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
     if r.status_code == 202:
@@ -238,7 +238,7 @@ def reboot(vm_id):
         "reboot": {
             "type": "SOFT"
         }
-    } 
+    }
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
     if r.status_code == 202:
@@ -257,7 +257,7 @@ def stop(vm_id, force):
 
     payload = {
         "os-stop": "null"
-    } 
+    }
 
     if force:
         payload["os-stop"] = {"force_shutdown": True}
@@ -352,8 +352,8 @@ def list(outline, text, mindisk=False, minram=False):
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("FLAVOR_ID\tFLOVOR_NAME");
-        click.echo("-------------------------------------------------------------------------------");
+        click.echo("FLAVOR_ID\tFLOVOR_NAME")
+        click.echo("-------------------------------------------------------------------------------")
         for flavor in json.loads(r.text)['flavors']:
             click.echo("%s\t%s" % (flavor["id"], flavor["name"]))
     else:
@@ -385,8 +385,8 @@ def list(outline, text, name, status, imagetype):
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("STATUS\tIMAGE_ID\tIMAGE_NAME");
-        click.echo("-------------------------------------------------------------------------------");
+        click.echo("STATUS\tIMAGE_ID\tIMAGE_NAME")
+        click.echo("-------------------------------------------------------------------------------")
         for image in json.loads(r.text)['images']:
             click.echo("%s\t%s\t%s" % (image["status"], image["id"], image["name"]))
     else:
@@ -403,7 +403,7 @@ def save(vm_id, image_name):
         "createImage": {
             "name": image_name
         }
-    } 
+    }
 
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
@@ -432,8 +432,8 @@ def list(keypair_name, text):
     r = requests.get(url, headers=headers)
 
     if text:
-        click.echo("KEYPAIR_NAME");
-        click.echo("-------------------------");
+        click.echo("KEYPAIR_NAME")
+        click.echo("-------------------------")
         for keypair in json.loads(r.text)['keypairs']:
             click.echo("%s" % (keypair['keypair']['name']))
     else:
@@ -450,7 +450,7 @@ def add(keypair_name, public_key):
         "keypair": {
             "name": keypair_name
         }
-    } 
+    }
 
     if public_key: payload['keypair']['public_key'] = public_key
 
