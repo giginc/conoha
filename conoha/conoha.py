@@ -302,7 +302,7 @@ def ips(vm_id):
 @click.option('--password', 'password', type=str, help='VM\'s root password', required=True)
 @click.option('-n', '--name', 'name', type=str, help='VM name')
 @click.option('-k', '--key', 'key', type=str, help='SSH key')
-@click.option('-g', '--group-names', 'groupNames', type=str, help='Security group name')
+@click.option('-g', '--group-names', 'groupNames', type=str, multiple=True, help='Security group name')
 def create(imageid, flavorid, password, name, key, groupNames):
     headers = { "X-Auth-Token": config.access_token }
     url = "https://compute.%s.conoha.io/v2/%s/servers" % (config.region, config.tenant_id)
@@ -318,7 +318,11 @@ def create(imageid, flavorid, password, name, key, groupNames):
 
     if name: payload["server"]['metadata']['instance_name_tag'] = name
     if key: payload['server']['key_name'] = key
-    if groupNames: payload['server']['security_groups'] = [{ 'name': groupNames }]
+    if groupNames:
+        securityGroups = []
+        for groupName in groupNames:
+            securityGroups.append({ 'name': groupName })
+        payload['server']['security_groups'] = securityGroups
 
     r = requests.post(url, headers=headers, data=json.dumps(payload))
 
