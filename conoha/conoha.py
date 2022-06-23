@@ -413,10 +413,12 @@ def list(outline, text, mindisk=False, minram=False):
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("FLAVOR_ID\tFLOVOR_NAME")
+        click.echo("FLAVOR_ID\t\t\t\tFLOVOR_NAME\tRAM\tVCPUS\tDISK")
         click.echo("-------------------------------------------------------------------------------")
-        for flavor in json.loads(r.text)['flavors']:
-            click.echo("%s\t%s" % (flavor["id"], flavor["name"]))
+        flavors = json.loads(r.text)['flavors']
+        flavors = sorted(flavors, key=lambda flavor: flavor["name"])
+        for flavor in flavors:
+            click.echo("{id}\t{name:<13s}\t{ram:>5d}\t{vcpus:>5d}\t{disk:>4d}".format(id=flavor["id"], name=flavor["name"], ram=flavor["ram"], vcpus=flavor["vcpus"], disk=flavor["disk"]))
     else:
         click.echo(r.text)
 
@@ -429,8 +431,8 @@ def image():
 @click.option('--text', is_flag=True)
 @click.option('-n', '--name', 'name', type=str, help='Image Name')
 @click.option('-s', '--status', 'status', type=str, help='Image Status')
-@click.option('-t', '--type', 'imagetype', type=str, help='Image Type')
-def list(outline, text, name, status, imagetype):
+@click.option('-t', '--tag', 'tag', type=str, help='Image Tag')
+def list(outline, text, name, status, tag):
     headers = { "X-Auth-Token": config.access_token }
 
     if outline and not text:
@@ -441,15 +443,17 @@ def list(outline, text, name, status, imagetype):
     query = {}
     if name: query["name"] = name
     if status: query["status"] = status
-    if imagetype: query["type"] = imagetype
+    if tag: query["tag"] = tag
 
     r = requests.get("%s?%s"%(url, urllib.parse.urlencode(query)), headers=headers)
 
     if text:
-        click.echo("STATUS\tIMAGE_ID\tIMAGE_NAME")
+        click.echo("STATUS\tIMAGE_ID\t\t\t\tOS_TYPE\t\t\t\tIMAGE_NAME")
         click.echo("-------------------------------------------------------------------------------")
-        for image in json.loads(r.text)['images']:
-            click.echo("%s\t%s\t%s" % (image["status"], image["id"], image["name"]))
+        images = json.loads(r.text)['images']
+        images = sorted(images, key=lambda image: image["name"])
+        for image in images:
+            click.echo("{status}\t{id}\t{ostype:26s}\t{name}".format(status=image["status"], id=image["id"], ostype=image["metadata"]["os_type"], name=image["name"]))
     else:
         click.echo(r.text)
 
